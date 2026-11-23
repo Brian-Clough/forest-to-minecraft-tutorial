@@ -55,3 +55,42 @@ I have included all necessary datasets for our example patch in [`data/`](data/)
 The script exports in UTM, the metric map projection for the area, at a scale of exactly 1 m. This is what makes one pixel equal one block. Missing values are -9999 (for elevation and height) so that "no data" is never mistaken for "zero metres".
 
 Next: [3. Looking at the raster](#3-looking-at-the-raster-next).
+
+### Looking at the rasters
+Before we start processing the data, let's have a look at our rasters so we know what to expect. The Minecraft world will be downstream of this step, so it's worth making sure the data are free of errors and that the grid is as expected. This repo includes a short diagnostic script which you can run as:
+
+```
+python scripts/03_inspect_raster.py
+```
+
+It prints a short report and writes two pictures. We will go through what each one tells us.
+
+#### Is the grid as expected?
+The report provides checks that the grid is in a metric coordinate system (UTM zone 10N) and that each cell is 1m. Our grid is 1,024 by, 1,024 cells, so our rendered world will represent an area a little over one square kilometer. 
+
+The report also includes a matrix to show which layers in the combined .tif file contain real data:
+
+band            valid %      min      max     mean
+dem3dep1m           0.0        -        -        -
+dem3dep10m        100.0    209.2    332.5    267.2
+canopy_h          100.0      0.0     34.0     12.6
+loss_year         100.0      0.0   2023.0   1344.7
+treecover2000     100.0      0.0    100.0     81.2
+
+This is mainly useful for checking which DEM to build the world off of. You can see that for our chosen block there is no 1m DEM coverage, so we will use the 10m layer instead. 
+
+Here's an overview of the data layers:
+
+![The four layers of the raster](docs/03_four_layers.png)
+
+*Figure 1. The four layers over the same 1,024 m square.*
+
+- **Elevation**: The block includes a ridge in the upper right, and drops down to a stream valley in the lower left. Minecraft's vertical axis is confined from -64 to 320, or a total of 384 blocks. With 123m of relief plus up to 34m of trees we will have room to spare. But this is a limitation to be aware of: blocks with very steep elevational gradients will get clipped. 
+
+- **Canopy height**: Dark green shows taller forest, while pale green is short grading to no trees. The canopy height map I used stops at 34m, so some of the very tall Douglas fir trees that grow in this part of the world will be clipped as well. 
+
+- **Year of forest loss**: This is the layer that tells us where the forest was cut and when. The colours are years: dark purple for the early 2000s, pink for the 2010s, yellow for about 2022, grey for no cut. Compare it with the canopy panel above. The pink block in the upper left lines up with the bare triangle, which is how the canopy map shows a cut from the 2010s: the replanted trees are still too small for the model to see.
+
+- **Tree cover in 2000**: A baseline from the start of the record. The pale patch in the upper middle was not forested in 2000 and sits in a region that shows no cut afterwards, which suggests it was cleared before the record began and has regrown since. That is my reading from the maps, not something the files state, so treat it as a guess.
+
+If you examine the data closely, you'll notice that there are some spots with predicted harvest yet standing trees per the canopy map. These are simply cases where harvests happened after the aerial imagery underpinning the canopy heights was taken after the harvests occur. We will follow the forest loss map. 
