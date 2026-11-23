@@ -35,12 +35,16 @@ if (FIXED_SW) {
 var region = ee.Geometry.Rectangle([x0, y0, x0 + SIZE_M, y0 + SIZE_M], crs, false);
 Map.addLayer(region, {color: 'white'}, 'Export window', true, 0.4);
 
+// A filtered collection can be empty (no lidar tiles here); its mosaic then has no bands and unmask() fails, so fall back to a constant.
+function safeMosaic(col, name) {
+  return ee.Image(ee.Algorithms.If(col.size().gt(0), col.mosaic().select(0), ee.Image.constant(-9999))).rename(name).toFloat();
+}
 var dem1raw = ee.ImageCollection('USGS/3DEP/1m').filterBounds(region).select('elevation');
-var dem1 = dem1raw.mosaic().rename('dem3dep1m').unmask(-9999);
+var dem1 = safeMosaic(dem1raw, 'dem3dep1m').unmask(-9999);
 // 10 m: the older single-image asset USGS/3DEP/10m is deprecated and exported empty; use the tile collection.
 var dem10col = ee.ImageCollection('USGS/3DEP/10m_collection').filterBounds(region).select('elevation');
 var dem10raw = dem10col.mosaic().setDefaultProjection(dem10col.first().projection()).resample('bicubic');  // smooth 10 m up to 1 m
-var dem10 = dem10raw.rename('dem3dep10m').unmask(-9999);
+var dem10 = ee.Image(ee.Algorithms.If(dem10col.size().gt(0), dem10raw, ee.Image.constant(-9999))).rename('dem3dep10m').toFloat().unmask(-9999);
 var meta = ee.ImageCollection('projects/sat-io/open-datasets/facebook/meta-canopy-height').mosaic().select(0).rename('canopy_h').unmask(-9999);
 var loss = HANSEN.select('lossyear').rename('loss_year').toFloat();
 var lossYear = loss.where(loss.gt(0), loss.add(2000)).unmask(0);
