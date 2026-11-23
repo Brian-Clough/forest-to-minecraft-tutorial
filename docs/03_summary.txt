@@ -1,0 +1,24 @@
+File: forest_aoi.tif
+Grid: 1024 x 1024 cells of 1 m, CRS EPSG:32610
+South-west corner (E, N): 465521, 5173342   centre: 46.7174 N, 123.4444 W
+
+band            valid %      min      max     mean
+dem3dep1m           0.0        -        -        -
+dem3dep10m        100.0    209.2    332.5    267.2
+canopy_h          100.0      0.0     34.0     12.6
+loss_year         100.0      0.0   2023.0   1344.7
+treecover2000     100.0      0.0    100.0     81.2
+
+Elevation used: dem3dep10m. Range 209.2 to 332.5 m, relief 123.3 m.
+Fits the 384-block build height with 261 blocks to spare for trees: yes
+
+Canopy height (m) by year of forest loss:
+loss year   share %   mean   p10   p50   p90
+none           33.2   14.3     9    14    21
+2003           17.7   10.1     6    10    14
+2013           20.3    0.1     0     0     0
+2021            1.5   22.5    20    23    26
+2022           26.7   21.2    17    22    26
+
+Read the table against the dates: the canopy map comes from imagery around 2018 to 2020, so areas cut after that
+still show standing trees. Chunk 6 uses the loss year to correct this.
