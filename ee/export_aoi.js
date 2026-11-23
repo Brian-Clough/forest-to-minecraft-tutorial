@@ -14,15 +14,13 @@ Map.addLayer(HANSEN.select('lossyear').selfMask(), {min: 1, max: 25, palette: ['
 
 var SIZE_M = 1024;
 var centre = Map.getCenter();
-var lon = ee.Number(centre.coordinates().get(0));
-var lat = ee.Number(centre.coordinates().get(1));
-var zone = lon.add(180).divide(6).floor().add(1);
-var crs = ee.String('EPSG:326').cat(zone.format('%02d'));     // WGS84 / UTM north
-var utmPoint = centre.transform(crs, 1);
-var xy = ee.List(utmPoint.coordinates());
-var x0 = ee.Number(xy.get(0)).floor().subtract(SIZE_M / 2);
-var y0 = ee.Number(xy.get(1)).floor().subtract(SIZE_M / 2);
-var region = ee.Geometry.Rectangle([x0, y0, x0.add(SIZE_M), y0.add(SIZE_M)], crs, false);
+var lonLat = ee.List(centre.coordinates()).getInfo();           // ordinary numbers, so we can build a plain CRS string
+var zone = Math.floor((lonLat[0] + 180) / 6) + 1;
+var crs = 'EPSG:326' + (zone < 10 ? '0' + zone : '' + zone);    // WGS84 / UTM, northern hemisphere (all of the US)
+var xy = ee.List(centre.transform(crs, 1).coordinates()).getInfo();
+var x0 = Math.floor(xy[0]) - SIZE_M / 2;
+var y0 = Math.floor(xy[1]) - SIZE_M / 2;
+var region = ee.Geometry.Rectangle([x0, y0, x0 + SIZE_M, y0 + SIZE_M], crs, false);
 Map.addLayer(region, {color: 'white'}, 'Export window', true, 0.4);
 
 var dem1 = ee.ImageCollection('USGS/3DEP/1m').select('elevation').mosaic().rename('dem3dep1m').unmask(-9999);
@@ -33,7 +31,7 @@ var lossYear = loss.where(loss.gt(0), loss.add(2000)).unmask(0);
 var tc = HANSEN.select('treecover2000').rename('treecover2000').toFloat().unmask(0);
 
 var out = ee.Image.cat([dem1.toFloat(), dem10.toFloat(), meta.toFloat(), lossYear, tc]).clip(region);
-print('Centre lon/lat', lon, lat);
+print('Centre lon/lat', lonLat);
 print('UTM CRS', crs);
 print('SW corner (E, N)', x0, y0);
 
