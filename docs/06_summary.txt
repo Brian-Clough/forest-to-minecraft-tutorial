@@ -1,0 +1,12 @@
+Stand classes (share of the window): mature 33.2%, regrowth 38.5%, recent cut 28.2%.
+Trees placed: 45,848 (437 per hectare over the whole window).
+
+stand           area %  trees/ha  median h    ground block
+mature            33.2       271        15          podzol
+cut 2003          17.7       714        10     grass_block
+cut 2013          20.3      1060         3     grass_block
+cut 2021           1.5         0         -     coarse_dirt
+cut 2022          26.7         0         -     coarse_dirt
+
+Regrowth height rule: 10 m at age 16, scaled by (age/16)^1.3; age 6 gives 2.8 m.
+Densities and the height curve are assumptions (see the constants at the top of the script).
