@@ -1,6 +1,6 @@
 """Chunk 7: write the terrain, ground blocks and trees into Minecraft region files.
 
-Reads out/surface_y.npy (chunk 4), out/ground.npy (chunk 6) and out/trees.csv (chunk 6). Writes out/world/region/r.X.Z.mca.
+Reads out/surface_y.npy (chunk 4), out/ground.npy (chunk 6) and out/trees.csv (chunk 6). Writes out/world/dimensions/minecraft/overworld/region/r.X.Z.mca.
 The world has no level.dat yet; chunk 8 adds it. One raster cell is one block: column c is world x, row r is world z.
 
 Usage: python scripts/07_write_world.py
@@ -12,7 +12,8 @@ from nbtlib import Compound, Int, Byte, Long, String, List, LongArray
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 OUT = ROOT / "out"
-REGION_DIR = OUT / "world" / "region"
+# Java 26.1 and later keep the overworld under dimensions/minecraft/overworld (older versions used world/region)
+REGION_DIR = OUT / "world" / "dimensions" / "minecraft" / "overworld" / "region"
 
 # The chunk layout below is the one Minecraft has used since 1.18. We stamp the chunks with an older DataVersion
 # (1.21, 3953) on purpose: the game upgrades older data when it loads it, so we do not have to match the newest
