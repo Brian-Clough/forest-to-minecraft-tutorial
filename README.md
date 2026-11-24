@@ -17,7 +17,7 @@ This tutorial uses Earth Engine for data access and python for processing the da
 8. [Open the world in Minecraft](#8-open-the-world-in-minecraft)
 9. [Check the world](#9-check-the-world)
 10. [Explore!](#10-explore)
-    
+
 ## 1. What we are building
 
 Minecraft generates new worlds by default, using its own internal logic. We are going to generate a map that is built with real world geospatial data instead. To do this, we'll use three layers:
@@ -54,9 +54,9 @@ I have included all necessary datasets for our example patch in [`data/`](data/)
 
 The script exports in UTM, the metric map projection for the area, at a scale of exactly 1 m. This is what makes one pixel equal one block. Missing values are -9999 (for elevation and height) so that "no data" is never mistaken for "zero metres".
 
-Next: [3. Looking at the raster](#3-looking-at-the-raster-next).
+Next: [3. Looking at the rasters](#3-looking-at-the-rasters).
 
-### Looking at the rasters
+## 3. Looking at the rasters
 Before we start processing the data, let's have a look at our rasters so we know what to expect. The Minecraft world will be downstream of this step, so it's worth making sure the data are free of errors and that the grid is as expected. This repo includes a short diagnostic script which you can run as:
 
 ```
@@ -162,6 +162,8 @@ The script saves the grid to `out/surface_y.npy`.
 
 ## 5. Decide where the trees go
 
+This chunk is a deliberately simple first pass, so you can see the placement idea on its own. Chunk 6 replaces the placement rules (a finer grid, and a density for each stand's age) and chunk 7 replaces the cone-shaped crown with a layered one. The numbers below are what you get if you stop here, and they are not the numbers in the finished world.
+
 We now have the ground level and it's time to put some trees on it. A tree in Minecraft is just blocks, but to create realistic models we need to know location, height, and crown width for every tree we will map. This can be worked up as a simple table, which will provide the mapping and dimensions of all of the trees we will place in the world. 
 
 Running this script will generate the placement:
@@ -262,6 +264,8 @@ height = 10.0 * (age / 16) ** 1.3
 
 Young stands are also crowded. We give each stand a number of stems per hectare that falls with age: 1,100 at age 5, 600 at age 20, 400 at age 40, and 280 in uncut forest. The script lays down a candidate tree in every 3 m square, then keeps a random share of them to match the stand's density.
 
+Each tree also gets a crown radius of its height divided by 8, rounded, and kept between 1 and 4 blocks. That is wider than chunk 5's ninth of the height, because the crowns in chunk 7 are layered and look thin at the narrower setting.
+
 ### Check it
 
 ```
@@ -273,7 +277,7 @@ cut 2021          1.5         0         -     coarse_dirt
 cut 2022         26.7         0         -     coarse_dirt
 ```
 
-The window now holds 45,848 trees, about 437 per hectare. That is about 1.1 million blocks of trunk and leaves, roughly double chunk 5, almost all of it from the young stands.
+The window now holds 45,848 trees, about 437 per hectare. Once chunk 7 draws their trunks and crowns, that comes to about 1.6 million blocks, most of them leaves. That is more than twice chunk 5's 0.7 million, and almost all of the increase comes from the young stands.
 
 In the side views, the 2013 stand is a thicket of 3-block saplings next to old trees 20 to 30 blocks tall. In the right-hand view, the 2022 clearcut meets the 2003 stand, whose trees are about 10 blocks tall.
 
@@ -311,7 +315,7 @@ For each chunk, the script fills the ground column by column from the surface he
 | the 3 blocks under the surface | dirt |
 | the surface block | podzol, grass block or coarse dirt, by the stand class from chunk 6 |
 
-Then it adds the trees. Each tree is a spruce trunk with a cone of spruce leaves, using the tree's height and crown radius from `out/trees.csv`. A tree is just a template, a list of block offsets from its base, and there are fewer than a hundred distinct templates, so the script builds each one once and stamps it out.
+Then it adds the trees. Each tree is a spruce trunk with a layered crown of spruce leaves, using the tree's height and crown radius from `out/trees.csv`. The trunk runs from the ground up to two blocks below the tip. The crown is a stack of flat discs of leaves: a single leaf at the very top, a small disc just below it, and then discs that widen steadily down to the full crown radius, ending about a third of the way up the tree. Every second layer is slightly narrower, which breaks up the smooth cone and makes the outline read as branches. Below the crown the trunk is bare, as it is on real conifers. A tree is just a template, a list of block offsets from its base, and there are fewer than a hundred distinct templates, so the script builds each one once and stamps it out.
 
 Two details matter. Leaves are written with `persistent: true`, because leaves that nothing attached them to would otherwise decay and vanish within minutes. And a tree never overwrites ground: a crown that leans over a slope stops where the hillside starts, and a trunk always wins over a neighbour's leaves.
 
@@ -321,14 +325,7 @@ Every chunk carries a `DataVersion` number. Java 26.3 is 5023. The script stamps
 
 ### Check what was written
 
-The script's own output only says that chunks were written. To check the content, we read some back with a separate piece of code that decodes the files straight from the format description:
-
-```
-columns checked: 6400, wrong: 0
-tallest tree: 31 trunk blocks (expected 31), a leaf at the tip
-```
-
-That is 25 random chunks, with every column's surface block, soil layers, bedrock and above-ground blocks matching the inputs. This is a check of the file, not of the game. Whether Minecraft accepts the files is something only opening the world can tell us, which chunk 10 does.
+The script's own output only says that chunks were written. Checking the content is a separate job, which chunk 9 does by reading every chunk back and comparing it with the tables. This is a check of the file, not of the game. Whether Minecraft accepts the files is something only opening the world can tell us, which chunk 8 does.
 
 ## 8. Open the world in Minecraft
 
@@ -379,7 +376,7 @@ You should now be standing in the forest, with ground that ends at the edge of t
 
 ### Optional: run it on a Paper server
 
-If you want a server `scripts/08b_make_server_folder.py` builds a ready server folder from the same world, including a `server.properties` with flat world settings and no mobs. Download Paper for 26.3, run it once, accept the EULA in `eula.txt` yourself, and run it again. The script prints the commands for setting the spawn. I've found this approach to be smoother than the above, but it does require another softeware dependency and some additional setup. 
+If you want a server `scripts/08b_make_server_folder.py` builds a ready server folder from the same world, including a `server.properties` with flat world settings and no mobs. Download Paper for 26.3, run it once, accept the EULA in `eula.txt` yourself, and run it again. The script prints the commands for setting the spawn. I've found this approach to be smoother than the above, but it does require another software dependency and some additional setup. 
 
 ## 9. Check the world
 
@@ -423,7 +420,7 @@ The check shows that the files hold what the tables say. It does not show that t
 
 ## 10. Explore!
 
-Once these checks are passing, it's time open the world and explore. This is partially for fun, but may also reveal more subtle visualization issues that our automatic checks missed. Fixing such anamolies will likely involve going back to the rules we used to generate the terrain, landcover types, and trees. When I was working through this I noticed some odd distortions to the way the tree canopies rendered that I had to go back and fix. If you adapt this script to other sites I would anticipate finding similar artifacts. 
+Once these checks are passing, it's time to open the world and explore. This is partially for fun, but may also reveal more subtle visualization issues that our automatic checks missed. Fixing such anomalies will likely involve going back to the rules we used to generate the terrain, landcover types, and trees. When I was working through this I noticed some odd distortions to the way the tree canopies rendered that I had to go back and fix. If you adapt this script to other sites I would anticipate finding similar artifacts. 
 
 The world opens, the files check out, and the trees look like a forest. Before you use it for anything, keep in mind what it is and what it is not. It is a 3D rendering of four public datasets, drawn at one block per metre. It is not a forest inventory, and the gaps between the datasets and the world are the useful part to understand.
 
@@ -471,7 +468,7 @@ The scripts in this repo can be adapted for any site. Here are the things to cha
 
 | What | Where |
 |---|---|
-| The area and the exported layers | the Earth Engine script from chunk 2 |
+| The area and the exported layers | `ee/export_aoi.js` |
 | The year of the canopy imagery | `IMAGERY_YEAR` in chunks 5 and 6 |
 | The stem density and growth curve for your forest type | the constants at the top of `06_stands_and_ground.py` |
 | The trees' look and the biome | `tree_template` and `BIOME` in `07_write_world.py` |
@@ -501,4 +498,4 @@ Here's a few issues I hit while building the example:
 
 ### Licences and credit
 
-Licenses and relevation info on the datasets I used can be found in `data/SOURCES.md`.
+Licences and credit information for the datasets I used can be found in `data/SOURCES.md`.
