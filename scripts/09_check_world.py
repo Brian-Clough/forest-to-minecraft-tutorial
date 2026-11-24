@@ -4,7 +4,7 @@ Reads every chunk back from out/world/.../region/*.mca with its own decoder (it 
   - all 4,096 chunks are present, with the right position and status
   - every column: bedrock at the bottom, stone, three blocks of dirt, then the surface block for its stand class,
     nothing but air, trunks and leaves above it, and no air below it
-  - every tree: its whole trunk is there, from the block above the ground to one below the tip
+  - every tree: its whole trunk is there, from the block above the ground to two blocks below the tip
   - the world holds exactly as many log blocks as the trees table says
 Writes docs/09_check.txt and exits with status 1 if anything fails.
 
@@ -109,12 +109,13 @@ def main():
                         fail(f"column x={cx * 16 + x}, z={cz * 16 + z} in chunk {cx},{cz} has the wrong blocks")
                     logs_found += int((B == LOG).sum()); leaves_found += int((B == LEAVES).sum())
                     for x, z, y, th, r, _ in by_chunk.get((cx, cz), []):
-                        trunk = B[y - Y_MIN + 1:y - Y_MIN + th, z % 16, x % 16]
-                        if len(trunk) != th - 1 or not (trunk == LOG).all():
+                        n_trunk = max(1, th - 2)                                          # the trunk stops two blocks below the tip
+                        trunk = B[y - Y_MIN + 1:y - Y_MIN + 1 + n_trunk, z % 16, x % 16]
+                        if len(trunk) != n_trunk or not (trunk == LOG).all():
                             bad_trees += 1
                             fail(f"tree at x={x}, z={z} (height {th}) is missing part of its trunk")
 
-    expected_logs = int((trees[:, 3] - 1).sum())
+    expected_logs = int(np.maximum(1, trees[:, 3] - 2).sum())
     say()
     say(f"Chunks found: {seen} of {expected_chunks}. DataVersion in the chunks: {sorted(versions)}.")
     say(f"Columns with the wrong blocks: {bad_columns} of {h * w:,}.")

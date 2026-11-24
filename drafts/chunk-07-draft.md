@@ -35,7 +35,9 @@ For each chunk, the script fills the ground column by column from the surface he
 | the 3 blocks under the surface | dirt |
 | the surface block | podzol, grass block or coarse dirt, by the stand class from chunk 6 |
 
-Then it adds the trees. Each tree is a spruce trunk with a cone of spruce leaves, using the tree's height and crown radius from `out/trees.csv`. A tree is just a template, a list of block offsets from its base, and there are fewer than a hundred distinct templates, so the script builds each one once and stamps it out.
+Then it adds the trees. Each tree is a spruce trunk with a layered cone of spruce leaves, using the tree's height and crown radius from `out/trees.csv`. A tree is just a template, a list of block offsets from its base, and there are fewer than a hundred distinct templates, so the script builds each one once and stamps it out.
+
+The crown shape matters more than it looks. A plain cone, with the radius shrinking smoothly to zero at the tip, leaves the top third of every tall tree as a bare brown pole, because the rounded radius reaches zero well before the tip. So the template does three things instead. The trunk stops two blocks below the tip, so a cap of leaves covers it. Every leaf layer is at least one block wide. And every other layer is one block narrower than its neighbour, which gives the stepped outline of a real spruce. The bottom layer always has the full crown radius, and the lowest third of the trunk stays bare, as it does on a mature conifer.
 
 Two details matter. Leaves are written with `persistent: true`, because leaves that nothing attached them to would otherwise decay and vanish within minutes. And a tree never overwrites ground: a crown that leans over a slope stops where the hillside starts, and a trunk always wins over a neighbour's leaves.
 
@@ -45,14 +47,7 @@ Every chunk carries a `DataVersion` number. Java 26.3 is 5023. The script stamps
 
 ### Check what was written
 
-The script's own output only says that chunks were written. To check the content, we read some back with a separate piece of code that decodes the files straight from the format description:
-
-```
-columns checked: 6400, wrong: 0
-tallest tree: 31 trunk blocks (expected 31), a leaf at the tip
-```
-
-That is 25 random chunks, with every column's surface block, soil layers, bedrock and above-ground blocks matching the inputs. This is a check of the file, not of the game. Whether Minecraft accepts the files is something only opening the world can tell us, which chunk 10 does.
+The script's own output only says that chunks were written, not that they hold the right blocks. Chunk 9 reads every chunk back with a separate decoder and compares it with the inputs. Whether Minecraft accepts the files is something only opening the world can tell us, which chunk 8 does.
 
 ---
 
@@ -60,8 +55,9 @@ That is 25 random chunks, with every column's surface block, soil layers, bedroc
 
 - **Not tested in Minecraft.** I cannot run the game here. I verified the files with an independent decoder that I wrote from the format description (25 random chunks, all 6,400 columns correct), but a real server or client may still object. Expect one round of fixes after you first open it.
 - **The DataVersion choice is a bet.** I could not confirm 26.3's exact chunk field names. The snapshot notes mention a Block State rename (`Name` to `id`, `Properties` to `properties`) but say only that it is a data pack change. An older stamp makes the game's upgrade code do the translation. If the game logs "upgrading" warnings or the blocks look wrong, that is the first thing to revisit.
-- **Chunk 8 should use DataVersion 5023** in `level.dat`, since that file describes the game version, while the chunks carry their own.
 - **No light or heightmap data is written.** The game computes both when it loads a chunk (`isLightOn` is 0). Expect a slow first load.
-- **Tree total is 1,466,770 blocks** (313,709 logs, 1,153,061 leaves, before overlaps). Chunk 6's earlier estimate of 1.1 million was rough, so I changed that line in its draft to "about 1.5 million".
+- **Tree total is about 1.6 million blocks** in the finished world: 267,914 logs and 1,333,433 leaves. The first version of the crown, a plain cone, gave about 0.8 million leaves. The layered crown is denser, so expect heavier rendering on slow machines. You saw no problem on your Mac with the first version, and this one has about 65% more leaves.
+- **Tested in the game.** You opened the first version and said it looked good apart from the crown shape. The layered crown is checked with the chunk 9 script and with a projection of the written blocks, but I have not seen it in the game.
 - **Outside the window the world is empty.** The game generates new terrain beyond the 1,024-block edge, according to the world type in `server.properties`. Chunk 8 and chunk 10 deal with that.
 - **Biome** is `minecraft:taiga` for the whole window. It sets the grass and leaf colours. A reader in a different forest type should change `BIOME`.
+- **Chunk 5 and the crown.** Chunk 5's text says the crown is a cone, with a half-width of about a ninth of the height. That is the placeholder used for its figure. The real crown is the layered shape above, with a half-width of about an eighth of the height (set in chunk 6). You may want to say in chunk 5 that the shape is a stand-in and chunk 7 builds the final one.

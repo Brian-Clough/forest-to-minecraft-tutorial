@@ -22,7 +22,7 @@ It checks four things:
 |---|---|
 | Chunks | all 4,096 are there, each in the right place, each marked complete |
 | Every column | bedrock at the bottom, then stone, then 3 blocks of dirt, then the surface block for its stand class, with no air underground and only air, trunks and leaves above it |
-| Every tree | the whole trunk is there, from the block above the ground up to the one below the tip |
+| Every tree | the whole trunk is there, from the block above the ground up to two blocks below the tip, where the leaf cap starts |
 | Logs | the world holds exactly as many log blocks as the trees table implies |
 
 It does not check the leaves exactly. Neighbouring crowns overlap, and a crown stops where a hillside starts, so the number of leaf blocks cannot be predicted from the table alone. It reports the count and leaves it at that.
@@ -33,8 +33,8 @@ It does not check the leaves exactly. Neighbouring crowns overlap, and a crown s
 Chunks found: 4096 of 4096. DataVersion in the chunks: [3953].
 Columns with the wrong blocks: 0 of 1,048,576.
 Trees: 45,848 in the table, 0 with a missing trunk block.
-Log blocks: 313,709 in the world, 313,709 expected from the trees table.
-Leaf blocks: 811,027 in the world (not checked exactly, ...).
+Log blocks: 267,914 in the world, 267,914 expected from the trees table.
+Leaf blocks: 1,333,433 in the world (not checked exactly, ...).
 
 PASS
 ```
