@@ -1,0 +1,12 @@
+Elevation source: dem3dep10m
+Ground height in blocks: y = 0 to 123 (123 blocks of relief)
+Tallest tree top if stood on the highest ground: y = 157 (limit 319)
+
+Largest height difference between a column and its four neighbours:
+  flat (0 blocks)               79.5% of columns
+  one block (walkable)          20.5% of columns
+  two or more (needs a jump)     0.0% of columns
+Median terrace width along east-west lines: 9 blocks (10th to 90th percentile 5 to 19)
+
+The file's 10 m elevation was already smoothed to 1 m in the export, so no further smoothing is applied.
+Whole-block heights turn gentle slopes into wide flat steps. That is a property of the block grid, not an error.
