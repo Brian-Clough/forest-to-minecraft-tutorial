@@ -1,67 +1,61 @@
-# Draft: Chunk 8, set up the server
+# Draft: Chunk 8, open the world in Minecraft
 
-*First-pass tutorial prose for you to revise. Script: `scripts/08_make_server_folder.py`. Run chunk 7 first. This chunk is a different kind of step from the earlier ones, because the script assembles a folder and then you run a server.*
+*First-pass tutorial prose for you to revise. Scripts: `scripts/08_install_world.py` (the main route) and `scripts/08b_make_server_folder.py` (optional). Run chunk 7 first. This is the one step where you work in the game itself.*
 
 ---
 
-## 8. Open the world in a server
+## 8. Open the world in Minecraft
 
-We have region files, but Minecraft also needs a few files around them, and a server to run them. This chunk uses a Paper server on your own computer, which is a free server that runs Minecraft Java worlds. You then join it from the normal game.
+We now have region files, but a Minecraft save needs more than those. It also needs a `level.dat` file holding the seed, the spawn point and the game rules. We could write that file by hand, but its contents change between Minecraft versions, and a wrong file means a world that will not open. So we let the game write it, and copy our region files into the save it creates.
 
-```
-python scripts/08_make_server_folder.py
-```
+### Create an empty world
 
-### What the script does
+1. Start Minecraft Java Edition 26.3 and choose **Create New World**.
+2. On the **World** tab, set **World Type** to **Superflat**.
+3. On the **More** tab, turn on **Allow Commands** (cheats). You will need one command later.
+4. Create the world, let it load, then save and quit to the title screen. The world must be closed before the next step.
 
-It copies the world from `out/world` to `out/server/world` and writes a small `server.properties` file next to it. It refuses to run if `out/server/world` already exists, so that it cannot overwrite a world you have played in.
-
-The settings it writes are these:
-
-| Setting | Value | Why |
-|---|---|---|
-| `level-type` | flat | the world outside our window is plain flat ground, not random terrain |
-| `generate-structures` | false | no villages or dungeons appear in the forest |
-| `spawn-monsters` | false | the forest stays quiet |
-| `spawn-animals` | false | no random cows or sheep |
-| `gamemode` | creative | you can fly and build |
-| `spawn-protection` | 0 | you can edit blocks next to the spawn point |
-
-Everything else takes the server's default.
-
-### Two files the script leaves alone
-
-The script does not write `level.dat`. That file holds the world's seed, spawn point, game rules and weather, and Java 26.1 changed it a good deal: some of its contents, such as game rules and world generation settings, moved to separate files. The server writes a correct one the first time it starts, so we let it.
-
-The script also does not write `eula.txt`. That file is your agreement to Mojang's end-user licence, and you should read it and accept it yourself.
-
-### Start the server
-
-1. Download the Paper server for Minecraft 26.3 from papermc.io and put the `.jar` file in `out/server`.
-2. From that folder, run `java -jar paper-*.jar`. It stops with a message about the EULA.
-3. Open `eula.txt` and change `eula=false` to `eula=true`.
-4. Run the same command again. Wait for a line saying the server is done starting.
-
-On the first start, the server finds our region files, creates `level.dat`, and upgrades each chunk as it loads, because the chunks were written with an older data version (chunk 7). Expect a slow start and some log lines about this. The game also works out the lighting for every chunk at that point.
-
-### Set the spawn and join
-
-The script prints two commands with the coordinates of the window's centre. Type them into the server console:
+### Copy our world into it
 
 ```
-setworldspawn 512 59 512
-tp <your name> 512 59 512
+python scripts/08_install_world.py "<path to the save folder>"
 ```
 
-Then start Minecraft Java 26.3, choose Multiplayer, add a server called `localhost`, and join. You should be standing in the middle of the forest window, and the ground should end at the edges of the 1,024-block square.
+The save folder is the world's folder inside Minecraft's `saves` directory:
+
+| System | Location |
+|---|---|
+| Mac | `~/Library/Application Support/minecraft/saves/<world name>` |
+| Windows | `%APPDATA%\.minecraft\saves\<world name>` |
+| Linux | `~/.minecraft/saves/<world name>` |
+
+The script finds the right folder inside the save and renames the old region folder to `region_original`, so nothing is deleted. Since Java 26.1 the overworld's regions live in `dimensions/minecraft/overworld/region/`, and before that in `region/`. The script checks which layout the save uses.
+
+It refuses to run in a save that is missing `level.dat`, and in one it has already installed into, so a second run cannot overwrite the first.
+
+### Open it and move to the forest
+
+Open the world from the single-player list. You will start underground, because the new world's spawn point sits at flat ground level, about y = -60, and our terrain now fills that space. The script printed a command with the coordinates of the window's centre. Type it in the chat:
+
+```
+/tp @s 512 59 512
+```
+
+You should now be standing in the forest, with ground that ends at the edge of the 1,024-block square. The first load can be slow, because the game computes lighting for every chunk it has not seen before. It also upgrades each chunk to the current format, because chunk 7 wrote them with an older data version. You may also want to set the world spawn with `/setworldspawn 512 59 512`.
+
+### Optional: run it on a Paper server
+
+If you want a server, for example to run the WolfRabbit plugin from the Minecraft ecology project, `scripts/08b_make_server_folder.py` builds a ready server folder from the same world, including a `server.properties` with flat world settings and no mobs. Download Paper for 26.3, run it once, accept the EULA in `eula.txt` yourself, and run it again. The script prints the commands for setting the spawn.
 
 ---
 
 ## Notes for you (not for publication)
 
-- **Never run in Minecraft by me.** Everything in this chunk is untested. The two risks, in order, are (1) the server does not use our region files because there is no `level.dat` yet, and (2) the server rejects or mis-reads chunks written with the older data version. If the world comes up as plain flat land, risk 1 happened. If it reports chunk errors, risk 2 did.
-- **Folder layout.** Java 26.1 and later keep the overworld in `world/dimensions/minecraft/overworld/region/`, and Paper follows the same layout (Paper's 26.1 announcement shows the tree). Chunk 7 originally wrote to `world/region/`, which was the pre-26.1 layout, so this patch moves that path. Fix chunk 7's README text if you copied the old path.
-- **Spawn height.** The printed `y` is one block above the surface at the window's centre, which is a mature or regrowth stand, so you may land inside a tree crown. If so, fly up. A better spawn is an easy follow-up.
-- **The edges.** Outside the window the server generates default flat land at about y = -60, while our ground sits at y = 0 to about 100, so you will see a cliff at the edge. A void world would hide it, but I did not confirm the flat-world settings format in 26.3, so I left it out.
-- **The EULA and the jar** are yours to handle. The script says so.
-- **Plugin worlds.** For WolfRabbit, the same `server.properties` settings apply, except `spawn-animals` should stay false as in its own README.
+- **Never run in Minecraft by me.** The two risks are (1) whether the game keeps our region files when it opens the save, and (2) whether it reads chunks written with the older data version (3953, set in `scripts/07_write_world.py`). If the world is flat land, risk 1 happened. If it reports chunk errors or the blocks look wrong, try risk 2 first.
+- **I tested the script, not the result.** I ran `08_install_world.py` against fake saves in both layouts (26.1 and later, and older), plus a missing-`level.dat` case and a second-run case. It copies the files and renames the old folder correctly each time.
+- **The "Allow Commands" label** is from memory of the world creation screen and may differ in 26.3. Any way of enabling cheats works.
+- **Leftover files.** The new world can have `entities` and `poi` folders generated for its starting chunks. The script leaves them alone, since the flat world holds no entities or points of interest worth keeping. If you see odd villagers or similar, delete them.
+- **The edges.** Outside the window the game generates ordinary flat land at about y = -60, while our ground reaches up to about y = 100, so there is a cliff at the boundary.
+- **Player position.** The player's saved position is the old spawn point, buried in the new terrain, so the `/tp` is required, not optional. Writing a better spawn would mean editing `level.dat`, which the whole route is designed to avoid.
+- **Codespace.** The scripts run in a Codespace, which has no Minecraft. Readers working there need to download `out/world` and run `08_install_world.py` on their own computer. The README should say so, and could suggest zipping `out/world` for download.
+- **Server route:** the earlier version of this chunk is now the optional section. Its files and layout are unchanged apart from the rename to `08b`.

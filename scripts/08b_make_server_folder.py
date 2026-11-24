@@ -1,10 +1,10 @@
-"""Chunk 8: put the world into a server folder Paper can start, with the settings it needs.
+"""Chunk 8, optional server route: put the world into a server folder Paper can start, with the settings it needs.
 
 Copies out/world (chunk 7) to out/server/world and writes out/server/server.properties. It does NOT write level.dat or
 eula.txt: the server creates level.dat itself on its first start, and you accept the EULA yourself. Prints the command that
 sets the spawn point.
 
-Usage: python scripts/08_make_server_folder.py
+Usage: python scripts/08b_make_server_folder.py
 """
 import shutil, sys, pathlib
 import numpy as np
