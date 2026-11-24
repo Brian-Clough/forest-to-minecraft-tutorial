@@ -9,15 +9,15 @@ This tutorial uses Earth Engine for data access and python for processing the da
 ## Contents
 1. [What we are building and why one block per metre](#1-what-we-are-building)
 2. [The data](#2-the-data)
-3. Looking at the raster *(next)*
-4. Terrain *(next)*
-5. Trees *(next)*
-6. Ground by stand age *(next)*
-7. Writing the world files *(next)*
-8. `level.dat` and the version number *(next)*
-9. Checking the result *(next)*
-10. Opening it in the game, and what to be honest about *(next)*
-
+3. [Looking at the rasters](#3-looking-at-the-rasters)
+4. [Turn elevation into blocks](#4-turn-elevation-into-blocks)
+5. [Decide where the trees go](#5-decide-where-the-trees-go)
+6. [Treat each stand by its age](#6-treat-each-stand-by-its-age)
+7. [Write the world](#7-write-the-world)
+8. [Open the world in Minecraft](#8-open-the-world-in-minecraft)
+9. [Check the world](#9-check-the-world)
+10. [Explore!](#10-explore)
+    
 ## 1. What we are building
 
 Minecraft generates new worlds by default, using its own internal logic. We are going to generate a map that is built with real world geospatial data instead. To do this, we'll use three layers:
