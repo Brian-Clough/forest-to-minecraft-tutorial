@@ -1,0 +1,8 @@
+
+Chunks found: 4096 of 4096. DataVersion in the chunks: [3953].
+Columns with the wrong blocks: 0 of 1,048,576.
+Trees: 45,848 in the table, 0 with a missing trunk block.
+Log blocks: 313,709 in the world, 313,709 expected from the trees table.
+Leaf blocks: 811,027 in the world (not checked exactly, because crowns overlap and stop at hillsides).
+
+PASS
