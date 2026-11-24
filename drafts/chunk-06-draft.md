@@ -53,7 +53,7 @@ cut 2021          1.5         0         -     coarse_dirt
 cut 2022         26.7         0         -     coarse_dirt
 ```
 
-The window now holds 45,848 trees, about 437 per hectare. That is about 1.1 million blocks of trunk and leaves, roughly double chunk 5, almost all of it from the young stands.
+The window now holds 45,848 trees, about 437 per hectare. Chunk 7 counts the blocks: about 1.5 million of trunk and leaves, most of them in the young stands.
 
 In the side views, the 2013 stand is a thicket of 3-block saplings next to old trees 20 to 30 blocks tall. In the right-hand view, the 2022 clearcut meets the 2003 stand, whose trees are about 10 blocks tall.
 
