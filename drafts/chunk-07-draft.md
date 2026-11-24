@@ -1,6 +1,6 @@
 # Draft: Chunk 7, write the world
 
-*First-pass tutorial prose for you to revise. Script: `scripts/07_write_world.py`. It reads `out/surface_y.npy` (chunk 4), `out/ground.npy` and `out/trees.csv` (both chunk 6), so run chunks 4 to 6 first. It takes about 15 seconds and writes `out/world/region/`, about 17 MB.*
+*First-pass tutorial prose for you to revise. Script: `scripts/07_write_world.py`. It reads `out/surface_y.npy` (chunk 4), `out/ground.npy` and `out/trees.csv` (both chunk 6), so run chunks 4 to 6 first. It takes about 15 seconds and writes `out/world/dimensions/minecraft/overworld/region/`, about 17 MB.*
 
 ---
 
@@ -15,6 +15,8 @@ python scripts/07_write_world.py
 ### How Minecraft stores a world
 
 Minecraft stores terrain in **region files**, one per 512 × 512 block square. Our window is 1,024 × 1,024 blocks, so it needs four: `r.0.0.mca`, `r.1.0.mca`, `r.0.1.mca` and `r.1.1.mca`.
+
+Since Java 26.1 the overworld's region files live inside the world folder at `dimensions/minecraft/overworld/region/`. Before 26.1 they sat directly in `world/region/`, and most older tutorials still show that layout. The script writes the new one.
 
 A region file holds 32 × 32 **chunks**, and each chunk is a 16 × 16 column of blocks that is 384 blocks tall (y from -64 to 319). A chunk is split into 24 **sections**, each 16 blocks tall.
 
