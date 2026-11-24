@@ -34,15 +34,31 @@ TOPSOIL_DEPTH = 3                            # dirt blocks under the surface blo
 
 
 def tree_template(h, r):
-    """Blocks of one tree relative to its ground column, as (dx, dy, dz, block). Trunk then a cone of leaves."""
+    """Blocks of one tree relative to its ground column, as (dx, dy, dz, block): a spruce-like layered cone.
+
+    The trunk stops two blocks below the tip, so leaves cap it and no bare pole shows. Each leaf layer is at least one block
+    wide. The layers widen towards the bottom of the crown, and every other layer is one block narrower, which gives the
+    stepped look of a conifer. The bottom layer always has the full radius r.
+    """
     base = max(1, int(round(0.35 * h))); cells = []
-    for k in range(base, h + 1):
-        rad = int(round(r * (h - k) / max(h - base, 1)))
+
+    def disc(k, rad):
+        limit = rad * rad + (0.5 if rad <= 1 else rad)           # rad 1: a plus shape; larger: a square with cut corners
         for dx in range(-rad, rad + 1):
             for dz in range(-rad, rad + 1):
-                if dx * dx + dz * dz <= rad * rad + 0.5:
+                if dx * dx + dz * dz <= limit:
                     cells.append((dx, k, dz, LEAVES))
-    for k in range(1, h):
+
+    cells.append((0, h, 0, LEAVES))                              # the tip
+    if h - 1 >= 2:
+        disc(h - 1, 1)
+    for k in range(h - 2, base - 1, -1):
+        i = h - k
+        rad = max(1, int(round(r * i / max(h - base, 1))))
+        if i % 2 == 1 and rad > 1 and k != base:
+            rad -= 1
+        disc(k, rad)
+    for k in range(1, max(1, h - 2) + 1):
         cells.append((0, k, 0, LOG))
     return np.array(cells, dtype=np.int32)
 

@@ -80,7 +80,7 @@ def place_trees(canopy, ground_y, loss, cls, rng):
     keep &= height_m >= 2.0
     z, x, height_m, lv = z[keep], x[keep], height_m[keep], lv[keep]
     hb = np.maximum(np.round(height_m).astype(int), 2)
-    r = np.clip(np.round(hb / 9), 1, 4).astype(int)
+    r = np.clip(np.round(hb / 8), 1, 4).astype(int)                  # crown half-width: about an eighth of the height
     return dict(x=x, z=z, y=ground_y[z, x], h=hb, r=r, loss=lv)
 
 

@@ -53,7 +53,7 @@ cut 2021          1.5         0         -     coarse_dirt
 cut 2022         26.7         0         -     coarse_dirt
 ```
 
-The window now holds 45,848 trees, about 437 per hectare. Chunk 7 counts the blocks: about 1.5 million of trunk and leaves, most of them in the young stands.
+The window now holds 45,848 trees, about 437 per hectare. Chunk 7 builds the blocks: about 1.6 million of trunk and leaves, mostly leaves.
 
 In the side views, the 2013 stand is a thicket of 3-block saplings next to old trees 20 to 30 blocks tall. In the right-hand view, the 2022 clearcut meets the 2003 stand, whose trees are about 10 blocks tall.
 
@@ -69,6 +69,6 @@ The one measured thing here is the 2003 point on the growth curve. The exponent,
 - **The growth curve rests on one data point.** The exponent 1.3 was picked to put age 6 under 3 m. It is a plausible shape, not a fitted one.
 - **Other loss years exist but are small** (2002, 2012, 2014, 2018 under regrowth; 2023 under recent cut, each under 0.5% of the window). They follow the same rules by age, and the table lists only cohorts above 0.5%.
 - **No stumps, shrubs or slash on the recent cuts.** Coarse dirt alone looks bare. Adding scattered stumps is an easy extension and a possible exercise.
-- **Not tested in Minecraft.** The block total is a rough count of trunks and cone crowns, as in chunk 5.
+- **Not tested in Minecraft.** Chunk 7 builds the real blocks, so the block total comes from there.
 - **The side views** are one row (640), chosen by scanning the loss map for stand boundaries. The 2003 and 2013 stands never meet along a row in this window, so they are in separate panels.
 - **Chunk 5's numbers are superseded.** If you keep the chunk 5 section as a stepping stone, say that chunk 6 replaces its tree table.
