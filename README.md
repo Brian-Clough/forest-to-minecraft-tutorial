@@ -329,3 +329,176 @@ tallest tree: 31 trunk blocks (expected 31), a leaf at the tip
 ```
 
 That is 25 random chunks, with every column's surface block, soil layers, bedrock and above-ground blocks matching the inputs. This is a check of the file, not of the game. Whether Minecraft accepts the files is something only opening the world can tell us, which chunk 10 does.
+
+## 8. Open the world in Minecraft
+
+Now it's time to open our world!
+
+We now have region files, but a Minecraft save also needs a `level.dat` file holding the seed, the spawn point and the game rules. We could write that file by hand, but its contents change between Minecraft versions, and a wrong file means a world that will not open. So we let the game write it, and copy our region files into the save it creates.
+
+I will warn you that this part is a bit fiddly. I haven't yet figured out a completely clean workflow for starting a new game with the world, so this is a bit of a workaround. If anyone develops a better approach be sure to let me know. 
+
+### First, create an empty world
+
+1. Start Minecraft Java Edition 26.3 and choose **Create New World**.
+2. On the **World** tab, set **World Type** to **Superflat**.
+3. On the **More** tab, turn on **Allow Commands** (cheats). You will need one command later.
+4. Create the world, let it load, then save and quit to the title screen. The world must be closed before the next step.
+
+### Copy our world into it
+
+First, run this:
+
+```
+python scripts/08_install_world.py "<path to the save folder>"
+```
+
+The save folder is the world's folder inside Minecraft's `saves` directory:
+
+| System | Location |
+|---|---|
+| Mac | `~/Library/Application Support/minecraft/saves/<world name>` |
+| Windows | `%APPDATA%\.minecraft\saves\<world name>` |
+| Linux | `~/.minecraft/saves/<world name>` |
+
+The script finds the right folder inside the save and renames the old region folder to `region_original`, so nothing is deleted. Since Java 26.1 the overworld's regions live in `dimensions/minecraft/overworld/region/`, and before that in `region/`. The script checks which layout the save uses.
+
+It refuses to run in a save that is missing `level.dat`, and in one it has already installed into, so a second run cannot overwrite the first.
+
+If you're running these scripts on a remote IDE such as a Github codespace etc. you can download the ```out/world.zip``` object and copy the files over by hand. 
+
+### Open it and move to the forest
+
+Open the world from the single-player list. You may start underground, because the new world's spawn point sits at flat ground level, about y = -60, and our terrain now fills that space. The script printed a command with the coordinates of the window's centre. Type it in the chat:
+
+```
+/tp @s 512 59 512
+```
+
+You should now be standing in the forest, with ground that ends at the edge of the 1,024-block square. The first load can be slow, because the game computes lighting for every chunk it has not seen before. It also upgrades each chunk to the current format, because chunk 7 wrote them with an older data version. You may also want to set the world spawn with `/setworldspawn 512 59 512`.
+
+### Optional: run it on a Paper server
+
+If you want a server `scripts/08b_make_server_folder.py` builds a ready server folder from the same world, including a `server.properties` with flat world settings and no mobs. Download Paper for 26.3, run it once, accept the EULA in `eula.txt` yourself, and run it again. The script prints the commands for setting the spawn. I've found this approach to be smoother than the above, but it does require another softeware dependency and some additional setup. 
+
+## 9. Check the world
+
+Opening the game tells you whether a world loads, but not whether it looks right. This chunk gives a check you can run before you open anything, and again whenever you change a script.
+
+```
+python scripts/09_check_world.py
+```
+
+### What it checks
+
+The script reads every chunk back out of the region files and compares it with the three tables that produced it to check four things:
+
+| Check | What counts as passing |
+|---|---|
+| Chunks | all 4,096 are there, each in the right place, each marked complete |
+| Every column | bedrock at the bottom, then stone, then 3 blocks of dirt, then the surface block for its stand class, with no air underground and only air, trunks and leaves above it |
+| Every tree | the whole trunk is there, from the block above the ground up to two blocks below the tip, where the leaf cap starts |
+| Logs | the world holds exactly as many log blocks as the trees table implies |
+
+It does not check the leaves exactly. Neighbouring crowns overlap, and a crown stops where a hillside starts, so the number of leaf blocks cannot be predicted from the table alone. It reports the count and leaves it at that.
+
+### Read the result
+
+```
+Chunks found: 4096 of 4096. DataVersion in the chunks: [3953].
+Columns with the wrong blocks: 0 of 1,048,576.
+Trees: 45,848 in the table, 0 with a missing trunk block.
+Log blocks: 267,914 in the world, 267,914 expected from the trees table.
+Leaf blocks: 1,333,433 in the world (not checked exactly, ...).
+
+PASS
+```
+
+If anything fails, the script prints the first 20 problems, each with the block position, then ends with `FAIL`. It also exits with an error status, so you can use it in an automated check.
+
+### What this does not tell you
+
+The check shows that the files hold what the tables say. It does not show that the tables look like a forest. Chunk 10 deals with that, and so does walking around in the game.
+
+
+## 10. Explore!
+
+Once these checks are passing, it's time open the world and explore. This is partially for fun, but may also reveal more subtle visualization issues that our automatic checks missed. Fixing such anamolies will likely involve going back to the rules we used to generate the terrain, landcover types, and trees. When I was working through this I noticed some odd distortions to the way the tree canopies rendered that I had to go back and fix. If you adapt this script to other sites I would anticipate finding similar artifacts. 
+
+The world opens, the files check out, and the trees look like a forest. Before you use it for anything, keep in mind what it is and what it is not. It is a 3D rendering of four public datasets, drawn at one block per metre. It is not a forest inventory, and the gaps between the datasets and the world are the useful part to understand.
+
+### What each piece is, and what it assumes
+
+| Part of the world | Where it comes from | What to keep in mind |
+|---|---|---|
+| Ground shape | USGS 10 m elevation, because the 1 m lidar layer was empty over this window | Terraces about 9 blocks wide (median), because 10 m data is rounded to whole blocks. Lidar would give finer steps. |
+| Tree heights | A canopy height model estimated from satellite photographs taken around 2018 to 2020 | An estimate, not a lidar measurement. Heights stop at about 34 m in this window. |
+| Which ground was cut, and when | Hansen forest-loss map at about 28 m | Small cuts are missed, edges are blocky, and a few trees leak across the edge of the 2013 cut. |
+| Tree positions | One random candidate per 3 m square, thinned to a density per stand | The positions are random, not surveyed. No real tree is at any of these spots. |
+| Regrowth heights and stem counts | A growth curve through one measured point, and assumed densities | These are the weakest numbers in the world. See chunk 6. |
+| Species | Every tree is a spruce | A placeholder. The data does not tell us the species. |
+| Ground blocks | Three choices by stand class | Podzol, grass and coarse dirt are looks, not soil measurements. |
+| What is missing | Understory, stumps, fallen logs, dead standing trees, streams, roads | None of these are in the datasets we used. |
+
+And of course, keep in mind this is a snapshot world with the tree heights dated to the 2018/2019 imagery used to generate the canopy height map. 
+
+### What can you use this for?
+
+Well, first of all for fun! If you have someone in your life who loves Minecraft they will probably enjoy exploring a custom world you built. And even if you are not a Minecrafter I suggest having a look around yourself. 
+
+But, I do think it can provide us with some helpful information too. It shows us the shape of the stands, the size and configuration of clearcuts, and how different ground conditions are related to one another in space. It could be useful for catching physical barriers, such as steep ravines, that might complicate an inventory plot layout. I've been using it to sanity check ecological model simulations, since I can pretty quickly output a world I can walk around. And of course, it could make for a great teaching tool. 
+
+It is not going to be helpful for counting trees, estimating carbon, or checking a model against the ground. In this world, the tree positions are invented and the regrowth numbers are assumed. I am sure you can get more of the real stand dynamics into the game, but the 1m grid size is always going to be a constraint on how realistic the results are. A more sophisticated visualization platform would be necessary to see accurate fine-scale stand structure. 
+
+### How big can the window be
+
+On the example window, each step is quick:
+
+| Step | Time | Output |
+|---|---|---|
+| chunk 4, terrain | about 1 s | `surface_y.npy` |
+| chunk 6, stands and trees | about 1 s | `trees.csv`, 45,848 trees |
+| chunk 7, write the world | about 10 s | 17 MB of region files, 3 MB zipped |
+| chunk 9, check | about 5 s | pass or fail |
+
+Peak memory was about 300 MB. The input raster is 2.6 MB.
+
+Bigger areas will probably require some clever data slicing and dicing. I'm sure it's possible, but I haven't tested it yet. Keep in mind however that each region file is around 4 mb, and there's also the processing of all those raster data to consider, so really big projects could be challenging. 
+
+### Use your own site
+
+The scripts in this repo can be adapted for any site. Here are the things to change:
+
+| What | Where |
+|---|---|
+| The area and the exported layers | the Earth Engine script from chunk 2 |
+| The year of the canopy imagery | `IMAGERY_YEAR` in chunks 5 and 6 |
+| The stem density and growth curve for your forest type | the constants at the top of `06_stands_and_ground.py` |
+| The trees' look and the biome | `tree_template` and `BIOME` in `07_write_world.py` |
+| The coordinate system | check the export is in a UTM zone that fits your site, because one cell must be one metre |
+
+Re-run the checks after every change. Chunk 9 compares the finished world with your tables, so it tells you if a change broke the writer. Please keep in mind that you will likely have to do some work to reproduce the flow for new locations, especially those outside of the continental US where at a minimum you will need to identify a different elevation dataset. 
+
+### What can go wrong
+
+Here's a few issues I hit while building the example:
+
+- **The world looks like the old version after you change a script.** Minecraft rewrites region files when it saves, so a file copied in while the game was running is overwritten. Quit the game completely before copying. If you move files between computers, compare `tail -c +8193 <file> | shasum` on both, and do it before the game has opened the world, because the game changes the files when it saves.
+- **You start underground.** The new world's spawn is at flat ground level, so type the `/tp` command from chunk 8.
+- **The commands are refused.** Turn on Allow Commands (cheats) when you create the world.
+- **The world is plain flat land.** The region files are not in `dimensions/minecraft/overworld/region/`, or the game ignored them. Check the folder layout against your game version.
+- **Chunk 9 says FAIL.** The message gives the block position of the first problems. Re-run chunk 7, and if it still fails, the cause is in your edit to the tables or to `07_write_world.py`.
+
+### Ideas to try next
+
+- Add stumps and slash to the recent cuts, so the coarse dirt does not look bare.
+- Give each stand its own species mix, with different log and leaf blocks.
+- Add an understory of ferns or shrubs under the older stands.
+- Add standing dead trees, as bare logs with no leaves.
+- Replace the assumed densities with plot data from your own site.
+- Smooth the terraces, or use the 1 m lidar if your site has it.
+- **Convert to bedrock**: If you prefer to play Minecraft on a handheld device, you can use an off-the-shelf tool such as Amulet to convert the Java build to Bedrock. 
+
+### Licences and credit
+
+Licenses and relevation info on the datasets I used can be found in `data/SOURCES.md`.
