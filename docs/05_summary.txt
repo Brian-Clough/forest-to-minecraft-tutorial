@@ -1,0 +1,15 @@
+Canopy correction: 28.2% of the window was cut after 2019; its canopy is set to 0 m.
+Mean canopy height: 12.6 m in the file, 6.6 m after correction.
+Trees placed: 14,252 (136 per hectare over the whole window), one candidate per 6 m square.
+Height of placed trees: median 13 blocks, 90th percentile 20, tallest 33.
+
+loss year    area %  trees/ha  median h
+none           33.2       264        15
+2003           17.7       264        10
+2013           20.3         2        10
+2021            1.5         0         -
+2022           26.7         0         -
+
+About 0.7 million blocks of trunk and leaves in total (about 0.7 per ground column).
+These counts treat every stand the same way: one tree per 6 m square wherever the canopy is 3 m or more. Young stands
+in real life are much denser than old ones, so the young stands here are too sparse. Chunk 6 refines the stands.
